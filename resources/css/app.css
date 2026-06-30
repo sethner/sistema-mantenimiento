@@ -1,0 +1,43 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 🔥 ESTILOS BASE DEL SISTEMA */
+@layer base {
+    body {
+        @apply bg-gray-50 text-gray-800;
+    }
+}
+
+/* 🔥 COMPONENTES REUTILIZABLES */
+@layer components {
+
+    .btn {
+        @apply px-4 py-2 rounded-lg text-sm font-medium transition;
+    }
+
+    .btn-primary {
+        @apply bg-primary text-white hover:bg-blue-700;
+    }
+
+    .btn-danger {
+        @apply bg-danger text-white hover:bg-red-700;
+    }
+
+    .btn-soft {
+        @apply p-2 bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 rounded-md shadow-sm transition;
+    }
+
+    .card {
+        @apply bg-white rounded-xl shadow-soft border;
+    }
+
+    .table-header {
+        @apply bg-gray-50 text-gray-500 uppercase text-xs;
+    }
+    
+    .btn-action {
+        @apply p-2 bg-white border border-gray-300 hover:bg-gray-100 text-gray-600 rounded-md transition;
+    }
+
+}

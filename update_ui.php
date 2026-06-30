@@ -1,0 +1,1 @@
+<?php\n\ = 'resources/views/mantenimientos/show.blade.php';\n\ = file_get_contents(\);\n\ = strpos(\, '@extends');\n// Actually, we can just rewrite the whole file because we have all the parts.\n
