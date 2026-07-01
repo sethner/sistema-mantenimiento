@@ -1,47 +1,45 @@
-FROM php:8.2-apache
+FROM php:8.2-fpm
 
-# Configurar variables de entorno del sistema para forzar MPM Prefork antes de instalar nada
-ENV APACHE_RUN_USER=www-data \
-    APACHE_RUN_GROUP=www-data \
-    APACHE_LOG_DIR=/var/www/html \
-    APACHE_MPM=prefork
-
-# Instalar herramientas del sistema y extensiones de PHP necesarias
+# Instalar Nginx y dependencias del sistema
 RUN apt-get update && apt-get install -y \
+    nginx \
     git \
     unzip \
     libzip-dev \
     && docker-php-ext-install pdo pdo_mysql zip
 
-# Instalar Composer de forma oficial
+# Instalar Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Habilitar el módulo de reescritura de Apache para Laravel
-RUN a2enmod rewrite
+# Configurar Nginx para Laravel
+RUN echo 'server { \n\
+    listen 8080; \n\
+    root /var/www/html/public; \n\
+    index index.php index.html; \n\
+    location / { \n\
+    try_files $uri $uri/ /index.php?$query_string; \n\
+    } \n\
+    location ~ \.php$ { \n\
+    include fastcgi_params; \n\
+    fastcgi_pass 127.0.0.1:9000; \n\
+    fastcgi_index index.php; \n\
+    fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name; \n\
+    } \n\
+    }' > /etc/nginx/sites-available/default
 
-# SOLUCIÓN DEFINITIVA MPM: Forzar la carga exclusiva de mpm_prefork eliminando mpm_event físicamente
-RUN rm -f /etc/apache2/mods-enabled/mpm_event.load /etc/apache2/mods-enabled/mpm_event.conf || true \
-    && ln -s /etc/apache2/mods-available/mpm_prefork.load /etc/apache2/mods-enabled/mpm_prefork.load || true
-
-# Configurar la carpeta pública de Laravel
-ENV APACHE_DOCUMENT_ROOT /var/www/html/public
-RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
-RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf
-
-# Copiar el código del proyecto al contenedor
+# Copiar el proyecto
 COPY . /var/www/html
+WORKDIR /var/www/html
 
-# Instalar las dependencias de Composer
+# Instalar dependencias de Composer
 RUN composer install --no-interaction --optimize-autoloader --no-dev
 
-# Dar permisos a las carpetas de almacenamiento de Laravel
+# Permisos
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Puerto en el que escuchará Apache
 EXPOSE 8080
 
-# Comando de inicio: Migraciones + encendido seguro del servidor Apache
-CMD php artisan migrate:fresh --seed --force && apache2-foreground
-
+# Forzar actualización de caché en Git con este comentario: v2.0.0
+CMD php artisan migrate:fresh --seed --force && php-fpm -D && nginx -g "daemon off;"
 
 
