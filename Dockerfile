@@ -1,55 +1,27 @@
 FROM php:8.2-apache
 
-# Instalar dependencias
-RUN apt-get update && apt-get install -y \
-    git \
-    unzip \
-    zip \
-    curl \
-    libpng-dev \
-    libjpeg62-turbo-dev \
-    libfreetype6-dev \
-    libonig-dev \
-    libxml2-dev \
-    libzip-dev \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install \
-    pdo_mysql \
-    mbstring \
-    exif \
-    bcmath \
-    gd \
-    zip \
-    && a2enmod rewrite \
-    && rm -rf /var/lib/apt/lists/*
+# Instalar extensiones de PHP necesarias para MySQL
+RUN docker-php-ext-install pdo pdo_mysql
 
-# Instalar Composer
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+# Habilitar el módulo de reescritura de Apache para Laravel
+RUN a2enmod rewrite
 
-# Directorio de trabajo
-WORKDIR /var/www/html
+# Solucionar el error de MPM desactivando el módulo duplicado
+RUN echo "Mutex posixsem" >> /etc/apache2/apache2.conf
 
-# Copiar archivos del proyecto
-COPY . .
+# Configurar la carpeta pública de Laravel
+ENV APACHE_DOCUMENT_ROOT /var/www/html/public
+RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
+RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf
 
-# Instalar dependencias de Laravel
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+# Copiar el código del proyecto al contenedor
+COPY . /var/www/html
 
-# Configurar Apache
-COPY laravel.conf /etc/apache2/sites-available/000-default.conf
+# Dar permisos a las carpetas de almacenamiento de Laravel
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Permisos
-RUN chown -R www-data:www-data storage bootstrap/cache \
-    && chmod -R 775 storage bootstrap/cache
-
-# Puerto Railway
+# Puerto en el que escuchará Apache (Railway pasará la variable PORT)
 EXPOSE 8080
 
-CMD sh -c '\
-    sed -i "s/Listen 80/Listen ${PORT}/" /etc/apache2/ports.conf && \
-    sed -i "s/*:80/*:${PORT}/" /etc/apache2/sites-available/000-default.conf && \
-    php artisan storage:link || true && \
-    php artisan config:cache && \
-    php artisan route:cache || true && \
-    php artisan view:cache && \
-    apache2ctl -D FOREGROUND'
+# Comando de inicio: Corre migraciones, seeders y enciende Apache en primer plano
+CMD php artisan migrate:fresh --seed --force
