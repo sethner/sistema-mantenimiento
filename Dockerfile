@@ -44,4 +44,6 @@ RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cac
 EXPOSE 8080
 
 # Comando de inicio: Vincula storage de forma real antes de encender
-CMD php artisan storage:link --force && php artisan migrate:fresh --seed --force && php-fpm -D && nginx -g "daemon off;"
+# Comando de inicio seguro para producción (No borra datos)
+# Comando de inicio corregido: PHP-FPM en primer plano y Nginx detrás
+CMD php artisan migrate --force && php-fpm & nginx -g "daemon off;"
