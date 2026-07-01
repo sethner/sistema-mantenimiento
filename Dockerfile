@@ -42,3 +42,6 @@ EXPOSE 8080
 
 # Comando de inicio: Migraciones + encendido seguro del servidor Apache
 CMD php artisan migrate:fresh --seed --force && apache2-foreground
+
+
+
