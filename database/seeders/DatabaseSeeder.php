@@ -305,7 +305,7 @@ class DatabaseSeeder extends Seeder
                 'direccion' => 'Av. Universitaria 1230, Los Olivos, Lima',
                 'telefono' => '(01) 485-9652',
                 'email' => 'soporte.aip@instituto.edu.pe',
-                'logo_path' => null,
+                'logo_path' => 'logos/logo.jpg',
             ]
         );
     }

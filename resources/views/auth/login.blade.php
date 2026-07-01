@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -7,17 +8,31 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        .fade-in { animation: fadeIn 0.6s ease; }
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.6s ease;
+        }
+
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
     </style>
 </head>
+
 <body class="min-h-screen bg-gray-100 flex items-center justify-center">
     <div class="w-full max-w-5xl shadow-2xl rounded-2xl overflow-hidden flex fade-in">
-        <div class="w-1/2 relative hidden md:flex flex-col justify-between p-10 text-white bg-cover bg-center" style="background-image: linear-gradient(to bottom right, rgba(30, 58, 138, 0.9), rgba(37, 99, 235, 0.7)), url('{{ asset('img/Colegio.jpg') }}');">
+        <div class="w-1/2 relative hidden md:flex flex-col justify-between p-10 text-white bg-cover bg-center" style="background-image: linear-gradient(to bottom right, rgba(30, 58, 138, 0.9), rgba(37, 99, 235, 0.7)), url('{{ asset('img/AIP.jpeg') }}');">
             <div class="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_top,white,transparent_70%)]"></div>
 
             <div class="relative z-10">
@@ -30,29 +45,29 @@
                 </p>
             </div>
 
-           
+
         </div>
 
         <div class="w-full md:w-1/2 bg-white p-10">
             <div class="flex justify-center mb-6">
-                <img src="{{ asset('img/logo.jpg') }}"
-                     class="w-20 h-20 rounded-full shadow border"
-                     alt="Sistema AIP">
+                <img src="{{ $config->logo_path ? asset('storage/' . $config->logo_path) : asset('img/logo.jpg') }}"
+                    class="w-20 h-20 rounded-full shadow border object-contain bg-white"
+                    alt="Sistema AIP">
             </div>
 
             <h2 class="text-center text-2xl font-bold text-gray-800 mb-1">Bienvenido</h2>
             <p class="text-center text-gray-500 text-sm mb-6">Inicia sesión para continuar</p>
 
             @if ($errors->any())
-                <div class="bg-red-100 text-red-700 p-3 rounded mb-4 text-sm">
-                    {{ $errors->first() }}
-                </div>
+            <div class="bg-red-100 text-red-700 p-3 rounded mb-4 text-sm">
+                {{ $errors->first() }}
+            </div>
             @endif
 
             @if (session('status'))
-                <div class="bg-green-100 text-green-700 p-3 rounded mb-4 text-sm">
-                    {{ session('status') }}
-                </div>
+            <div class="bg-green-100 text-green-700 p-3 rounded mb-4 text-sm">
+                {{ session('status') }}
+            </div>
             @endif
 
             <form method="POST" action="{{ route('login') }}">
@@ -98,14 +113,14 @@
             <p class="text-center text-gray-400 text-xs mt-6">
                 © 2026 I.E. Jorge Chávez
             </p>
-           
+
         </div>
     </div>
     <script>
         function togglePassword() {
             const passwordInput = document.getElementById('password');
             const eyeIcon = document.getElementById('eyeIcon');
-            
+
             if (passwordInput.type === 'password') {
                 passwordInput.type = 'text';
                 eyeIcon.innerHTML = `
@@ -121,4 +136,5 @@
         }
     </script>
 </body>
+
 </html>

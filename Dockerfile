@@ -1,51 +1,72 @@
 FROM php:8.2-apache
 
-# 1. Instalar dependencias del sistema y PHP
+# Instalar dependencias del sistema
 RUN apt-get update && apt-get install -y \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
-    zip \
-    unzip \
     git \
     curl \
+    unzip \
+    zip \
+    libpng-dev \
+    libjpeg62-turbo-dev \
+    libfreetype6-dev \
+    libonig-dev \
+    libxml2-dev \
     libzip-dev \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install \
+    pdo_mysql \
+    mbstring \
+    exif \
+    pcntl \
+    bcmath \
+    gd \
+    zip \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-# 2. Activar módulo rewrite para Laravel
+# Habilitar mod_rewrite
 RUN a2enmod rewrite
 
-# 3. Traer e instalar Composer oficial de forma global
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+# Configurar Apache para que apunte a /public
+ENV APACHE_DOCUMENT_ROOT /var/www/html/public
 
-# 4. Forzar de forma absoluta la raíz en la configuración global de Apache
-RUN sed -i 's|DocumentRoot /var/www/html|DocumentRoot /var/www/html/public|g' /etc/apache2/apache2.conf
-RUN sed -i 's|<Directory /var/www/>|<Directory /var/www/html/public/>|g' /etc/apache2/apache2.conf
+RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' \
+    /etc/apache2/sites-available/*.conf \
+    /etc/apache2/apache2.conf \
+    /etc/apache2/conf-available/*.conf
 
-# 5. Sobreescribir por completo el sitio por defecto con la ruta pública
-RUN echo '<VirtualHost *:80>\n\
-    DocumentRoot /var/www/html/public\n\
-    <Directory /var/www/html/public>\n\
-    Options Indexes FollowSymLinks MultiViews\n\
-    AllowOverride All\n\
-    Require all granted\n\
-    </Directory>\n\
-    </VirtualHost>' > /etc/apache2/sites-available/000-default.conf
+# Instalar Composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# 6. Configurar directorio de trabajo y copiar el código
+# Directorio de trabajo
 WORKDIR /var/www/html
+
+# Copiar archivos de Composer
+COPY composer.json composer.lock ./
+
+# Instalar dependencias
+RUN composer install \
+    --no-dev \
+    --optimize-autoloader \
+    --no-interaction
+
+# Copiar el resto del proyecto
 COPY . .
 
-# 7. Instalar dependencias de Laravel
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+# Optimizar Laravel
+RUN php artisan config:clear || true
+RUN php artisan cache:clear || true
+RUN php artisan view:clear || true
 
-# 8. Crear un archivo de prueba rápido por si acaso
-RUN echo "<?php echo '¡El contenedor y Apache funcionan perfectamente!'; ?>" > public/prueba.php
-
-# 9. Permisos absolutos para evitar bloqueos de almacenamiento
-RUN chown -R www-data:www-data /var/www/html
-RUN chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache
+# Permisos
+RUN chown -R www-data:www-data storage bootstrap/cache \
+    && chmod -R 775 storage bootstrap/cache
 
 EXPOSE 80
 
-CMD php artisan storage:link --force && php artisan config:cache && php artisan view:cache && apache2-foreground
+CMD ["sh", "-c", "\
+    php artisan storage:link || true && \
+    php artisan config:cache && \
+    php artisan route:cache || true && \
+    php artisan view:cache && \
+    apache2-foreground"]

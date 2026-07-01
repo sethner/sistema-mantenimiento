@@ -203,21 +203,40 @@
                                          n.tipo === 'finalizado' ? 'bg-emerald-50 dark:bg-emerald-900/20' : (n.titulo.includes('VENCIDO') || n.tipo === 'falla_critica' ? 'bg-red-50 dark:bg-red-900/20' : ''),
                                          !n.leida ? 'border-l-4 border-l-indigo-500' : ''
                                      ]">
-                                    <a :href="n.enlace" class="block px-5 py-4 pr-10">
-                                        <div class="flex justify-between items-start mb-1">
-                                            <div class="flex items-center gap-2">
-                                                <template x-if="!n.leida">
-                                                    <span class="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></span>
+                                    <template x-if="n.enlace">
+                                        <a :href="n.enlace" class="block px-5 py-4 pr-10">
+                                            <div class="flex justify-between items-start mb-1">
+                                                <div class="flex items-center gap-2">
+                                                    <template x-if="!n.leida">
+                                                        <span class="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></span>
+                                                    </template>
+                                                    <p class="text-xs font-black text-gray-800 dark:text-gray-200" x-text="n.titulo"></p>
+                                                </div>
+                                                <template x-if="n.titulo.includes('VENCIDO')">
+                                                    <span class="text-[9px] bg-red-600 text-white px-1.5 py-0.5 rounded font-black uppercase">Urgente</span>
                                                 </template>
-                                                <p class="text-xs font-black text-gray-800 dark:text-gray-200" x-text="n.titulo"></p>
                                             </div>
-                                            <template x-if="n.titulo.includes('VENCIDO')">
-                                                <span class="text-[9px] bg-red-600 text-white px-1.5 py-0.5 rounded font-black uppercase">Urgente</span>
-                                            </template>
+                                            <p class="text-xs text-gray-500 line-clamp-2" x-text="n.mensaje"></p>
+                                            <p class="text-[10px] text-gray-400 mt-2 font-medium" x-text="n.hace"></p>
+                                        </a>
+                                    </template>
+                                    <template x-if="!n.enlace">
+                                        <div class="block px-5 py-4 pr-10">
+                                            <div class="flex justify-between items-start mb-1">
+                                                <div class="flex items-center gap-2">
+                                                    <template x-if="!n.leida">
+                                                        <span class="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></span>
+                                                    </template>
+                                                    <p class="text-xs font-black text-gray-800 dark:text-gray-200" x-text="n.titulo"></p>
+                                                </div>
+                                                <template x-if="n.titulo.includes('VENCIDO')">
+                                                    <span class="text-[9px] bg-red-600 text-white px-1.5 py-0.5 rounded font-black uppercase">Urgente</span>
+                                                </template>
+                                            </div>
+                                            <p class="text-xs text-gray-500 line-clamp-2" x-text="n.mensaje"></p>
+                                            <p class="text-[10px] text-gray-400 mt-2 font-medium" x-text="n.hace"></p>
                                         </div>
-                                        <p class="text-xs text-gray-500 line-clamp-2" x-text="n.mensaje"></p>
-                                        <p class="text-[10px] text-gray-400 mt-2 font-medium" x-text="n.hace"></p>
-                                    </a>
+                                    </template>
                                     <button @click.stop="
                                         fetch(`/notificaciones/${n.id}/leida`, {
                                             method: 'POST',
