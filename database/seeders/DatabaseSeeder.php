@@ -312,19 +312,6 @@ class DatabaseSeeder extends Seeder
 
     private function role(string $nombre): Role
     {
-        $role = Role::where('nombre', $nombre)->first();
-        if (! $role) {
-            $role = new Role();
-            $role->nombre = $nombre;
-            $role->slug = $this->slug($nombre);
-            $role->save();
-        }
-
-        return $role;
-    }
-
-    private function slug(string $text): string
-    {
-        return str_replace(' ', '-', strtolower(trim($text)));
+        return Role::firstOrCreate(['nombre' => $nombre]);
     }
 }
